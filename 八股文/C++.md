@@ -1,4 +1,3 @@
-
 ## C++基础
 
 ### 指针和引⽤的区别
@@ -2610,54 +2609,1352 @@ void* _aligned_malloc(size_t size, size_t alignment);
 
 
 ### C++ 三大特性
+#### 1. 封装 (Encapsulation)
+- **核心思想**：将数据与操作数据的方法绑定，隐藏实现细节
+- **实现方式**：
+    - 访问修饰符：`public`、`private`、`protected`
+    - `class`/`struct` 定义
+- **关键优势**：
+    - 数据保护
+    - 简化接口
+    - 降低耦合度
+创建类时， 用私有成员变量来保护数据，通过公有方法提供访问接口。
+```
+class BankAccount {
+private:
+    double balance;  // 封装的数据
 
-#### 多态的实现
-#### 静态多态与动态多态
+public:
+    void deposit(double amount) {  // 封装的接口
+        if (amount > 0) balance += amount;
+    }
+    
+    double getBalance() const { return balance; }
+};
+```
+
+#### 2. 继承 (Inheritance)
+
+- **核心思想**：创建新类（派生类）复用现有类（基类）的特性
+    
+- **实现方式**：
+```
+class Shape {  // 基类
+public:
+    virtual void draw() const = 0;
+};
+
+class Circle : public Shape {  // 派生类
+public:
+    void draw() const override {
+        std::cout << "Drawing a circle\n";
+    }
+};
+```
+
+| 继承类型      | 基类 public 成员 | 基类 protected 成员 | 基类 private 成员 |
+|-----------|--------------|-----------------|---------------|
+| public    | public       | protected       | 不可访问          |
+| protected | protected    | protected       | 不可访问          |
+| private   | private      | private         | 不可访问          |
+#### 3. 多态 (Polymorphism)
+
+- **核心思想**：同一接口在不同上下文中表现不同行为
+- **分类**：
+    - 编译时多态（静态多态）
+    - 运行时多态（动态多态）
+##### 1. 动态多态（运行时多态）
+ref:[[虚函数]]
+###### 实现原理：虚函数(virtual function) + 虚函数表(vtable)
+```
+class Animal {
+public:
+    virtual void speak() const {  // 虚函数
+        std::cout << "Animal sound\n";
+    }
+    virtual ~Animal() = default;  // 虚析构函数
+};
+
+class Dog : public Animal {
+public:
+    void speak() const override {  // 重写虚函数
+        std::cout << "Woof!\n";
+    }
+};
+
+class Cat : public Animal {
+public:
+    void speak() const override {
+        std::cout << "Meow!\n";
+    }
+};
+
+void makeAnimalSpeak(const Animal& animal) {
+    animal.speak();  // 动态绑定
+}
+
+int main() {
+    Dog fido;
+    Cat whiskers;
+    
+    makeAnimalSpeak(fido);     // 输出: Woof!
+    makeAnimalSpeak(whiskers); // 输出: Meow!
+}
+```
+###### 底层机制：虚函数表(vtable)
+
+
+##### 2. 静态多态（编译时多态）
+
+###### 实现方式：模板(templates) + 函数重载
+```
+// 函数重载
+void print(int value) {
+    std::cout << "Integer: " << value << "\n";
+}
+
+void print(double value) {
+    std::cout << "Double: " << value << "\n";
+}
+
+// 函数模板
+template <typename T>
+T max(T a, T b) {
+    return (a > b) ? a : b;
+}
+
+// 类模板
+template <typename T>
+class Container {
+    T element;
+public:
+    Container(T elem) : element(elem) {}
+    void show() const { std::cout << element << "\n"; }
+};
+
+int main() {
+    print(5);        // 输出: Integer: 5
+    print(3.14);     // 输出: Double: 3.14
+    
+    std::cout << max(10, 20) << "\n";      // 输出: 20
+    std::cout << max(5.5, 3.3) << "\n";    // 输出: 5.5
+    
+    Container<int> intContainer(123);
+    Container<std::string> strContainer("Hello");
+    intContainer.show();  // 输出: 123
+    strContainer.show();  // 输出: Hello
+}
+```
+#### 动态多态和静态多态
+
+| 特性    | 动态多态           | 静态多态       |
+|-------|----------------|------------|
+| 绑定时间  | 运行时            | 编译时        |
+| 实现机制  | 虚函数 + 继承       | 模板 + 重载    |
+| 性能开销  | 虚表查找（约10-30ns） | 无额外开销      |
+| 代码大小  | 单个函数实例         | 每类型生成一个实例  |
+| 灵活性   | 运行时类型决定行为      | 编译时类型决定行为  |
+| 类型安全  | 需基类接口          | 编译时类型检查    |
+| 可扩展性  | 通过派生类扩展        | 通过新类型或特化扩展 |
+| 接口要求  | 必须派生自共同基类      | 只需满足隐式接口   |
+| 二进制兼容 | 需要虚表兼容         | 无兼容问题      |
+| 典型应用  | GUI框架、插件系统     | STL容器、算法   |
+
+
+
 
 ### 访问修饰符
+| 修饰符       | 类内访问 | 派生类访问 | 类外访问 | 典型应用场景      |
+|-----------|------|-------|------|-------------|
+| public    | ✅    | ✅     | ✅    | 公共接口、常量定义   |
+| protected | ✅    | ✅     | ❌    | 派生类可访问的内部实现 |
+| private   | ✅    | ❌     | ❌    | 内部实现细节、数据封装 |
+
 
 
 ### 多重继承
+多重继承（Multiple Inheritance）是 C++ 中一个强大但争议性的特性，允许一个类同时继承多个基类。它既是强大的工具，也是潜在问题的来源。
+#### 多重继承核心概念表
+
+|**特性**|**说明**|**示例**|
+|---|---|---|
+|**基本语法**|类同时继承多个基类|`class D : public B1, public B2`|
+|**内存布局**|包含所有基类子对象 + 派生类数据|顺序排列基类|
+|**构造函数调用**|按继承顺序调用基类构造函数|`D() : B1(), B2() {}`|
+|**菱形继承问题**|多个路径继承同一基类导致重复子对象|`B ← C1, C2 ← D`|
+|**虚继承**|解决菱形继承问题（`virtual` 关键字）|`class C1 : virtual public B`|
+|**接口继承**|只继承纯虚函数的抽象基类|Java/C# 风格接口模拟|
+|**作用域解析**|解决名称冲突 `obj.Base::method()`|明确指定调用哪个基类的方法|
+示例
+1. 基础多重继承
+```
+#include <iostream>
+
+// 基类1：引擎系统
+class Engine {
+public:
+    void start() { std::cout << "Engine started\n"; }
+};
+
+// 基类2：导航系统
+class Navigation {
+public:
+    void setCourse(double deg) { 
+        std::cout << "Course set to " << deg << "°\n"; 
+    }
+};
+
+// 派生类：无人机（多重继承）
+class Drone : public Engine, public Navigation {
+public:
+    void fly() {
+        start();        // 调用Engine方法
+        setCourse(45);  // 调用Navigation方法
+        std::cout << "Drone flying\n";
+    }
+};
+
+int main() {
+    Drone dji;
+    dji.fly();
+    /* 输出：
+       Engine started
+       Course set to 45°
+       Drone flying
+    */
+}
+```
+2. 内存布局分析
+```
+Drone 对象内存布局：
++---------------------+
+| Engine 子对象       |
+|   - 引擎相关数据    |
++---------------------+
+| Navigation 子对象   |
+|   - 导航相关数据    |
++---------------------+
+| Drone 特有数据      |
++---------------------+
+```
+#### 菱形继承问题（钻石问题）
+![[菱形继承.png]]
+![[菱形继承2.png]]
+
+> 结果：**数据冗余，二义性**
+
+![[菱形继承3.png]]
+解决方法：虚继承
+**虚拟继承**是一种在C++中解决菱形继承问题的机制。当一个子类通过多个父类继承同一个祖先类时，会导致潜在的二义性（即“钻石问题”）。**虚拟继承通过确保只有一份祖先类的实例存在**，来避免这种问题。
+**主要特点：**
+**语法**：在继承时使用关键字`virtual`来声明父类。例如
+```
+class A {};
+class B : virtual public A {};
+class C : virtual public A {};
+class D : public B, public C {};
+```
+> 注意，这里是在腰部进行virtual关键字，最下面的儿子以及祖先都不写！
+
+1. **共享实例**：虚拟继承确保无论通过哪个路径继承，只有一个A的实例存在于D中。
+2. **构造顺序**：虚拟基类的构造函数在所有派生类构造之前被调用，确保它的成员被初始化。
+3. **访问**：在虚拟继承中，派生类可以通过虚拟基类来访问祖先类的成员，避免了命名冲突。
+**优点：**
+- 消除了菱形继承带来的二义性，以及数据冗余
+- 提高了代码的可维护性和可读性。
+**虚拟继承的原理：**
+内存布局
+```
+普通菱形继承内存布局：
++---------------------+
+| B 子对象 (C1路径)   |  // 重复实例
++---------------------+
+| C1 数据             |
++---------------------+
+| B 子对象 (C2路径)   |  // 重复实例
++---------------------+
+| C2 数据             |
++---------------------+
+| D 数据              |
++---------------------+
+
+虚继承内存布局：
++---------------------+
+| D 数据              |
++---------------------+
+| C1 数据             |
++---------------------+
+| C2 数据             |
++---------------------+
+| B 子对象 (共享)     |  // 唯一实例
++---------------------+
+| 虚基类指针 (C1)     | → [偏移量]
++---------------------+
+| 虚基类指针 (C2)     | → [偏移量]
++---------------------+
+```
+1. **虚基类指针（vbcptr）**
+- 每个虚继承的派生类包含一个**虚基类指针**
+- 该指针指向**虚基类表（vbtable）** 或直接存储偏移量
+
+2. **虚基类表（vbtable）**
+```
+// 编译器生成的虚基类表示例
+struct D_vbtable {
+    int offset_to_B;  // B子对象相对于当前对象的偏移量
+    // 其他虚基类偏移...
+};
+```
+ 3. **共享基类机制**
+- 虚基类子对象存储在派生类末尾
+- 所有中间类通过偏移量访问同一实例
+
+```
+class Base {
+public:
+    int base_data = 10;
+};
+
+class Mid1 : virtual public Base {
+public:
+    int mid1_data = 20;
+};
+
+class Mid2 : virtual public Base {
+public:
+    int mid2_data = 30;
+};
+
+class Derived : public Mid1, public Mid2 {
+public:
+    int derived_data = 40;
+};
+
+// 使用示例
+void accessBase() {
+    Derived d;
+    d.base_data = 100;  // 直接访问唯一Base实例
+    
+    Mid1* m1 = &d;
+    m1->base_data = 200;  // 通过虚基类指针访问
+    
+    // 验证地址相同
+    std::cout << "Derived访问: " << &d.base_data << "\n";
+    std::cout << "Mid1访问: " << &m1->base_data << "\n";
+}
+-----------------------------------------------------------
+Derived对象内存布局：
+0x00: [Mid1部分]
+       0x00: vbcptr_Mid1 → 0x30 (虚基类表)
+       0x08: mid1_data = 20
+       
+0x10: [Mid2部分]
+       0x10: vbcptr_Mid2 → 0x40 (虚基类表)
+       0x18: mid2_data = 30
+       
+0x20: [Derived部分]
+       0x20: derived_data = 40
+       
+0x28: [Base共享部分]
+       0x28: base_data = 100
+       
+0x30: [Mid1虚基类表]
+       0x30: offset_to_Base = 0x28 (40字节)
+       
+0x40: [Mid2虚基类表]
+       0x40: offset_to_Base = 0x28 (40字节)
+```
+![[虚基类的访问过程.png]]
+**构造函数处理机制**
+1. 虚基类构造函数（只调用一次）
+2. 非虚基类构造函数（按声明顺序）
+3. 成员对象构造函数
+4. 自身构造函数
 
 
 ### 重载和重写
+> **核心区别**：  
+> **重载** = 同一作用域内的函数变体  
+> **重写** = 派生类对基类虚函数的重新实现
 
+| 特性        | 重载 (Overloading) | 重写 (Overriding)        |
+|-----------|------------------|------------------------|
+| 作用域       | 同一类或命名空间内        | 继承体系中的基类与派生类之间         |
+| 函数签名      | 必须不同（参数类型/数量/顺序） | 必须完全相同（协变返回除外）         |
+| virtual要求 | 不需要              | 必须声明为虚函数               |
+| 多态类型      | 编译时多态（静态绑定）      | 运行时多态（动态绑定）            |
+| 返回值       | 可以不同             | 必须相同（协变返回除外）           |
+| 访问权限      | 可以不同             | 可以不同（但通常保持一致）          |
+| 关键字       | 无                | virtual + override（推荐） |
+| 目的        | 提供相同功能的多种实现方式    | 改变基类行为的特定实现            |
+#### 重载（Overloading）详解
+**核心规则**
+1. 函数名相同
+2. 参数列表不同（类型/数量/顺序）
+3. 与返回值类型无关
+```
+class Calculator {
+public:
+    // 1. 参数数量不同
+    int add(int a, int b) {
+        return a + b;
+    }
+    
+    int add(int a, int b, int c) {
+        return a + b + c;
+    }
+    
+    // 2. 参数类型不同
+    double add(double a, double b) {
+        return a + b;
+    }
+    
+    // 3. 参数顺序不同
+    void print(int a, double b) {
+        std::cout << "Int: " << a << ", Double: " << b;
+    }
+    
+    void print(double b, int a) {
+        std::cout << "Double: " << b << ", Int: " << a;
+    }
+    
+    // 错误示例：仅返回值不同 ❌
+    // double add(int a, int b) { return a + b; }
+};
+
+// 全局函数重载
+void log(const char* msg) {
+    std::cout << "[INFO] " << msg;
+}
+
+void log(int priority, const char* msg) {
+    std::cout << "[" << priority << "] " << msg;
+}
+```
+底层原理
+```
+; 编译器生成不同名称的修饰函数名
+_Z3addii    ; add(int, int)
+_Z3addiii   ; add(int, int, int)
+_Z3adddd    ; add(double, double)
+```
+
+#### 重写（Overriding）详解
+**核心规则**
+1. 基类函数必须是`virtual`
+2. 派生类函数签名完全匹配
+3. 协变返回允许返回派生类型指针/引用
+```
+class Calculator {
+public:
+    // 1. 参数数量不同
+    int add(int a, int b) {
+        return a + b;
+    }
+    
+    int add(int a, int b, int c) {
+        return a + b + c;
+    }
+    
+    // 2. 参数类型不同
+    double add(double a, double b) {
+        return a + b;
+    }
+    
+    // 3. 参数顺序不同
+    void print(int a, double b) {
+        std::cout << "Int: " << a << ", Double: " << b;
+    }
+    
+    void print(double b, int a) {
+        std::cout << "Double: " << b << ", Int: " << a;
+    }
+    
+    // 错误示例：仅返回值不同 ❌
+    // double add(int a, int b) { return a + b; }
+};
+
+// 全局函数重载
+void log(const char* msg) {
+    std::cout << "[INFO] " << msg;
+}
+
+void log(int priority, const char* msg) {
+    std::cout << "[" << priority << "] " << msg;
+}
+```
+虚函数表原理
+```
+Shape 的虚表 (vtable):
++-------------------+
+| &Shape::draw      |
++-------------------+
+| &Shape::clone     |
++-------------------+
+
+Circle 的虚表:
++-------------------+
+| &Circle::draw     |  // 重写
++-------------------+
+| &Circle::clone    |  // 重写（协变）
++-------------------+
+```
 #### 编译器在底层如何实现重载
+> **核心机制**：编译器通过**名称修饰（Name Mangling）** 在底层为每个重载函数生成唯一符号名，实现函数签名到机器码的映射
 
+![[重载实现流程.png|168]]
+
+#### ⚙️ 关键步骤详解
+
+##### 1. **名称修饰（Name Mangling）**
+编译器根据函数签名生成唯一内部名称：
+```
+// 原始函数
+void print(int);
+void print(double);
+void print(const char*);
+
+// GCC/Clang 修饰后
+_Z5printi    // print(int)
+_Z5printd    // print(double)
+_Z5printPKc  // print(const char*)
+
+// MSVC 修饰后
+?print@@YAXH@Z   // print(int)
+?print@@YAXN@Z   // print(double)
+?print@@YAXPBD@Z // print(const char*)
+```
+##### 2. **修饰规则要素**
+
+|**元素**|**编码**|**示例**|
+|---|---|---|
+|函数名|原始名称|`print` → `5print`|
+|参数类型|类型编码|`int` → `i`|
+|命名空间|`N{namespace}`|`std::` → `N3std`|
+|类名|`C{class}`|`MyClass::` → `C8MyClass`|
+|返回类型|通常不包含|(C++标准不参与重载)|
+|常量限定|`K`|`const` → `K`|
 
 ### 成员函数/成员变量/静态成员函数/静态成员变量的区别
 
+| 特性         | 成员变量       | 成员函数          | 静态成员变量           | 静态成员函数              |
+|------------|------------|---------------|------------------|---------------------|
+| 存储位置       | 对象内存中      | 代码段           | 全局数据区            | 代码段                 |
+| 生命周期       | 随对象创建/销毁   | 程序运行期         | 程序运行期            | 程序运行期               |
+| 内存占用       | 每个对象独立副本   | 无对象占用         | 全类共享一个实例         | 无对象占用               |
+| 访问方式       | obj.member | obj.method()  | Class::staticVar | Class::staticFunc() |
+| this 指针    | 通过 this 访问 | 隐式包含 this     | 不包含 this         | 不包含 this            |
+| 常量性        | 可声明为 const | 可声明为 const    | 不可声明为 const      | 不可声明为 const         |
+| const 对象访问 | 只读访问       | 只能调用 const 方法 | 可读写访问            | 可调用                 |
+| 初始化位置      | 构造函数初始化列表  | 不适用           | 类外初始化            | 不适用                 |
+#### 成员变量 (非静态数据成员)
+**特征**：
+- 每个对象拥有独立副本
+- 存储在对象内存空间中
+- 生命周期与对象绑定
+```
+class Player {
+public:
+    // 成员变量
+    std::string name;  // 字符串对象
+    int health;        // 整型变量
+    Position position; // 自定义类型
+    
+    Player(const std::string& n, int h) 
+        : name(n), health(h) {}  // 构造函数初始化
+    
+    void takeDamage(int damage) {
+        health -= damage;  // 访问成员变量
+    }
+};
+
+int main() {
+    Player p1("Alice", 100);
+    Player p2("Bob", 150);
+    
+    p1.health = 120;  // 访问成员变量
+    p2.takeDamage(30);
+}
+```
+#### 成员函数 (非静态成员函数)
+**特征**：
+- 隐式包含 `this` 指针
+- 可以访问对象的所有成员
+- 可声明为 `const` 成员函数
+```
+class BankAccount {
+    double balance = 0.0;
+public:
+    // 成员函数
+    void deposit(double amount) {
+        balance += amount;  // 隐式使用 this->balance
+    }
+    
+    // const成员函数
+    double getBalance() const { 
+        return balance;  // 保证不修改对象状态
+    }
+    
+    // 修改对象状态的函数不能声明为const
+    void withdraw(double amount) {
+        if (balance >= amount) balance -= amount;
+    }
+};
+
+int main() {
+    const BankAccount savings(1000.0);
+    // savings.withdraw(100);  // 错误：const对象不能调用非const方法
+    double bal = savings.getBalance();  // 正确：调用const方法
+}
+```
+#### 静态成员变量
+ **特征**：
+- 类级别共享（所有对象共用同一个实例）
+- 必须在类外初始化
+- 不依赖对象实例存在
+```
+class Employee {
+public:
+    // 静态成员变量声明
+    static int totalCount;
+    static const int maxCount = 100;  // 整型静态常量可在类内初始化
+    
+private:
+    static double averageSalary;  // 私有静态变量
+    
+public:
+    Employee() {
+        totalCount++;  // 修改静态成员
+    }
+    
+    ~Employee() {
+        totalCount--;
+    }
+    
+    static void printStats() {
+        std::cout << "Total employees: " << totalCount << "\n";
+        // 可访问averageSalary
+    }
+};
+
+// 类外定义和初始化静态成员
+int Employee::totalCount = 0;
+double Employee::averageSalary = 50000.0;  // 私有静态成员初始化
+
+int main() {
+    Employee e1, e2, e3;
+    std::cout << Employee::totalCount;  // 输出: 3
+}
+```
+#### 静态成员函数
+**特征**：
+- 无 `this` 指针
+- 只能访问静态成员
+- 可通过类名直接调用
+```
+class MathUtility {
+    // 私有构造函数防止实例化
+    MathUtility() = delete; 
+    
+public:
+    // 静态成员函数
+    static double pi() { 
+        return 3.1415926535; 
+    }
+    
+    static int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+    
+    static double calculateCircleArea(double radius) {
+        return pi() * radius * radius;
+    }
+};
+
+int main() {
+    // 无需创建对象直接调用
+    double area = MathUtility::calculateCircleArea(5.0);
+    int maxVal = MathUtility::max(10, 20);
+}
+```
 
 ### 构造函数和析构函数
+#### 构造函数
+构造函数是一种特殊的成员函数，在创建对象时自动调用，用于初始化对象的状态。
+**核心特性**：
+- 函数名与类名完全相同
+- 无返回类型（void也不写）
+- 可重载（一个类可有多个构造函数）
+- 自动调用（对象创建时）
+- 可以是`public`、`protected`或`private`
+- 默认构造函数（无参）可由编译器自动生成
 
+| 构造函数类型         | 语法示例                               | 调用时机           | 特点                         | 注意事项                 |
+|----------------|------------------------------------|----------------|----------------------------|----------------------|
+| 默认构造函数         | ClassName();                       | 不提供参数创建对象时     | 无参数编译器自动生成必须公共可访问          | 若定义了其他构造函数，编译器不再自动生成 |
+| 参数化构造函数        | ClassName(int a, double b);        | 提供初始化参数时       | 带一个或多个参数支持重载               | 常用于初始化对象状态           |
+| 拷贝构造函数         | ClassName(const ClassName& other); | 对象拷贝初始化时       | 参数为同类对象的const引用编译器自动生成浅拷贝  | 资源管理类需实现深拷贝          |
+| 移动构造函数 (C++11) | ClassName(ClassName&& other);      | 使用右值初始化对象时     | 参数为右值引用高效转移资源所有权noexcept优化 | 使用std::move触发        |
+| 委托构造函数 (C++11) | ClassName() : ClassName(0, 0.0) {} | 构造函数调用同类其他构造函数 | 简化代码避免重复初始化逻辑              | 初始化列表中调用被委托构造先执行     |
+| 显式构造函数         | explicit ClassName(int a);         | 显式类型转换时        | 禁止隐式类型转换                   | 提高类型安全避免意外转换         |
+| 转换构造函数         | ClassName(const OtherType& value); | 从其他类型隐式转换时     | 单个参数支持隐式转换                 | 可配合explicit限制        |
+
+
+#### 析构函数
+析构函数在对象销毁时自动调用，用于释放对象持有的资源。
+**核心特性**：
+
+| 特性   | 说明                         | 示例                   |
+|------|----------------------------|----------------------|
+| 命名规范 | ~ClassName()               | ~MyClass();          |
+| 调用时机 | 对象生命周期结束时自动调用              | 局部变量超出作用域、delete操作等  |
+| 参数限制 | 无参数                        | 不能声明为~MyClass(int x) |
+| 重载限制 | 不可重载（每个类唯一）                | 一个类只能有一个析构函数         |
+| 访问控制 | 可为public、protected或private | 通常为public            |
+| 继承特性 | 可声明为virtual                | virtual ~Base();     |
+| 自动生成 | 未定义时编译器生成默认析构函数            | 执行成员变量的默认析构操作        |
+#### 析构函数调用时机
+1. 局部对象超出作用域
+```
+void example() {
+    ResourceHandler rh; // 构造函数调用
+    // ... 使用资源 ...
+} // 函数结束，rh析构函数调用
+```
+2. 堆对象被delete
+```
+ResourceHandler* ptr = new ResourceHandler();
+delete ptr; // 析构函数调用
+```
+3. 临时对象生命周期结束
+```
+processData(ResourceHandler()); // 临时对象构造后立即析构
+```
+4. 容器元素被移除
+```
+std::vector<ResourceHandler> resources;
+resources.push_back(ResourceHandler()); // 临时对象
+resources.clear(); // 所有元素析构
+```
+5. 程序结束
+```
+static ResourceHandler globalResource; // 程序结束时析构
+```
+
+#### 虚析构函数
+总的来说虚析构函数是为了**避免内存泄露**，而且是当子类中会有指针成员变量时才会使用得到的。也就说**虚析构函数使得在删除指向子类对象的基类指针时可以调用子类的析构函数达到释放子类中堆内存的目的，而防止内存泄露的**.
+
+![[虚析构函数的工作原理.png]]
+
+##### 核心作用详解
+###### 1. 解决多态销毁问题（核心价值）
+```
+class Base {
+public:
+    virtual ~Base() { }  // 虚析构函数是关键！
+};
+
+class Derived : public Base {
+    int* data = new int[100];  // 派生类特有资源
+public:
+    ~Derived() { delete[] data; }  // 资源释放
+};
+
+Base* obj = new Derived();  // 基类指针指向派生类对象
+delete obj;  // 正确调用：~Derived() → ~Base()
+             // 避免内存泄漏！
+```
+###### 2. 确保销毁顺序正确性
+**正确顺序**：
+1. 调用最派生类析构函数
+2. 逐级向上调用基类析构函数
+```
+~Derived() → ~Base() // 自底向上
+```
+###### 3. 实现安全的多态容器
+```
+std::vector<Base*> objects;
+objects.push_back(new DerivedA());
+objects.push_back(new DerivedB());
+
+// 安全清理
+for (auto* obj : objects) {
+    delete obj;  // 正确调用各派生类析构函数
+}
+```
+###### 4. 支持工厂模式/接口编程
+```
+class AbstractFactory {
+public:
+    virtual ~AbstractFactory() = default;  // 虚析构
+    virtual Product* create() = 0;
+};
+
+// 使用时
+AbstractFactory* factory = new ConcreteFactory();
+Product* p = factory->create();
+delete factory;  // 安全销毁ConcreteFactory
+```
+
+> ⚠️ **黄金法则**：如果一个类设计为**基类**（会被继承）或包含**任何虚函数**，必须声明虚析构函数。这是C++多态编程的基石，防止资源泄漏的根本保障。
+
+##### 为什么C++不默认所有析构为虚？
+1. 空间开销：每个对象增加虚表指针
+2. 兼容性：与C结构体布局兼容
+3. 性能：非多态类不需要间接调用
+4. 设计哲学：不为不需要的特性买单
+
+##### 说说为什么要虚析构，为什么不能虚构造
+| 特性   | 虚析构函数                      | 虚构造函数       |
+|------|----------------------------|-------------|
+| 存在性  | ✅ 支持且必需                    | ❌ C++ 语言不支持 |
+| 应用场景 | 多态基类                       | 无法实现        |
+| 作用时机 | 对象销毁时                      | 对象创建时       |
+| 实现机制 | virtual ~Base() = default; | 语法上不允许      |
+| 必要性  | 防止派生类资源泄漏                  | 无实际需求       |
+| 替代方案 | 无                          | 工厂模式/克隆方法   |
+1. **技术不可能性**
+2. **根本原因分析**
+
+| 阶段     | 构造函数              | 析构函数              |
+|--------|-------------------|-------------------|
+| 对象状态   | 对象尚未完全创建          | 对象正在销毁            |
+| vptr状态 | vptr 尚未初始化        | vptr 即将被销毁        |
+| 多态能力   | 无法通过未初始化的 vptr 多态 | 通过已初始化的 vptr 实现多态 |
+| 类型信息   | 运行时类型尚未确定         | 运行时类型已知           |
+3. **逻辑矛盾点**
+- **构造函数任务**：创建**特定类型**的对象
+- **虚函数本质**：在**已有对象**上动态分派行为  
+    → 创建过程无法动态分派（先有鸡还是先有蛋问题）
 
 ### 虚函数
+[对C++虚函数不了解？看完这篇文章掌握虚函数的原理和作用 - 知乎](https://zhuanlan.zhihu.com/p/629281871)
+虚函数是在父类中定义的一种特殊类型的函数，允许子类重写该函数以适应其自身需求。虚函数的调用取决于对象的实际类型，而不是指针或引用类型。通过将函数声明为虚函数，可以使继承层次结构中的每个子类都能够使用其自己的实现，从而提高代码的可扩展性和灵活性。在C++中，使用关键字"virtual"来定义虚函数。
+```
+class Animal {
+public:
+    virtual void makeSound() {
+        cout << "The animal makes a sound.\n";
+    }
+};
+
+class Cat : public Animal {
+public:
+    void makeSound() {
+        cout << "Meow!\n";
+    }
+};
+
+class Dog : public Animal {
+public:
+    void makeSound() {
+        cout << "Woof!\n";
+    }
+};
+```
+Animal类有一个虚函数makeSound()，它被Cat和Dog类继承并覆盖了该函数以实现不同的行为。当使用Animal指针或引用调用makeSound()函数时，会根据运行时对象的类型来动态地决定调用哪个子类的函数，从而实现[多态性](https://zhida.zhihu.com/search?content_id=227971983&content_type=Article&match_order=1&q=%E5%A4%9A%E6%80%81%E6%80%A7&zhida_source=entity)。
+#### 为什么需要虚函数？
+虚函数可以让子类对象在运行时动态地继承和修改父类的成员函数，使得代码更加灵活、可重用，并且可以实现多态性和[抽象类](https://zhida.zhihu.com/search?content_id=227971983&content_type=Article&match_order=1&q=%E6%8A%BD%E8%B1%A1%E7%B1%BB&zhida_source=entity)等高级特性。
+1. 通过虚函数，可以实现多态性（Polymorphism），即同一个函数名可以在不同的子类中表现出不同的行为，这样可以提高代码的可重用性和灵活性。
+2. 避免静态绑定，在使用父类指针或引用调用子类对象的成员函数时，如果没有使用虚函数，则会进行静态绑定（Static Binding），即只能调用父类的成员函数，无法调用子类特有的成员函数。
+3. 虚函数的调用是[动态绑定](https://zhida.zhihu.com/search?content_id=227971983&content_type=Article&match_order=1&q=%E5%8A%A8%E6%80%81%E7%BB%91%E5%AE%9A&zhida_source=entity)（Dynamic Binding）的，即在运行时根据指针或引用所指向的对象类型来选择调用哪个函数，从而实现动态多态性。
+4. 抽象类是一种不能直接实例化的类，只能被其他类继承并实现其虚函数。通过定义[纯虚函数](https://zhida.zhihu.com/search?content_id=227971983&content_type=Article&match_order=1&q=%E7%BA%AF%E8%99%9A%E5%87%BD%E6%95%B0&zhida_source=entity)（Pure Virtual Function），可以使得一个类成为抽象类，强制其子类必须实现该函数。
+![[虚函数.png]]
+#### 实现原理
+在 C++ 中，虚函数的实现原理基于两个关键概念：[虚函数表](https://zhida.zhihu.com/search?content_id=227971983&content_type=Article&match_order=1&q=%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8&zhida_source=entity)和[虚函数指针](https://zhida.zhihu.com/search?content_id=227971983&content_type=Article&match_order=1&q=%E8%99%9A%E5%87%BD%E6%95%B0%E6%8C%87%E9%92%88&zhida_source=entity)。
+- 虚函数表：每个包含虚函数的类都会生成一个虚函数表（Virtual Table），其中存储着该类中所有虚函数的地址。虚函数表是一个由指针构成的数组，每个指针指向一个虚函数的实现代码。
+- 虚函数指针：在对象的内存布局中，编译器会添加一个额外的指针，称为虚函数指针或虚表指针（Virtual Table Pointer，简称 VTable 指针）。这个指针指向该对象对应的虚函数表，从而让程序能够动态地调用正确的虚函数。
+当一个基类指针或引用调用虚函数时，编译器会使用虚表指针来查找该对象对应的虚函数表，并根据函数在虚函数表中的位置来调用正确的虚函数。
+
+#### 虚函数表
+虚函数表是一种用于实现多态的机制，在 C++ 中，当一个类中包含虚函数时，编译器会自动为该类生成一个虚函数表。这个表由包含虚函数的类的指针所指向，其中每个条目都存储着对应虚函数的地址。当使用一个对象调用其虚函数时，编译器通过该对象的虚函数表找到对应的虚函数地址，并进行调用。
+![[虚函数表.png]]
+**虚函数表的作用在于实现了多态**，即通过基类指针或引用调用派生类的虚函数，实现了不同对象的不同行为。因此，虚函数表使得程序可以更加灵活地处理不同类型的对象，并支持代码的扩展和修改。同时，由于虚函数表的存在，C++ 中的虚函数调用比起其他语言（如 Java）中的成本要高，因为需要额外的内存空间存储虚函数表及其指针。
+##### 虚函数表的分配时机
+
+| 阶段      | 行为                          | 关键特点                                       |
+|---------|-----------------------------|--------------------------------------------|
+| 编译阶段    | 编译器为每个含虚函数的类生成虚函数表结构        | 1. 每个类一个vtable2. 包含该类所有虚函数指针3. 生成在程序的只读数据段 |
+| 程序加载阶段  | 操作系统将vtable数据加载到内存的只读数据段    | 1. 内存位置固定2. 所有对象共享同一vtable3. 通常位于.rodata段  |
+| 对象构造阶段  | 在构造函数调用前初始化vptr指向正确的vtable  | 1. 由编译器插入的隐式代码完成2. 按继承顺序逐层设置vptr           |
+| 构造过程中   | 构造函数执行期间vptr可能被多次修改         | 1. 反映当前构造层次2. 确保动态类型正确                     |
+| 对象生命周期内 | vptr保持稳定指向所属类的vtable        | 1. 通过vptr实现多态调用2. 除非主动修改否则不变               |
+| 对象析构阶段  | 析构函数执行期间vptr被逐层修改指向基类vtable | 1. 确保析构顺序正确2. 防止调用已销毁类的虚函数                 |
+###### 详细分配过程
+ 1. 编译期生成（编译器行为）
+```
+// 示例类
+class Base {
+public:
+    virtual void func1() {}
+    virtual ~Base() {}
+};
+
+class Derived : public Base {
+public:
+    void func1() override {}
+    virtual void func2() {}
+};
+//编译器会为这两个类生成类似这样的vtable结构：
+//Base类的vtable：
+[0] Base::func1()的地址
+[1] Base::~Base()的地址
+//Derived类的vtable：
+[0] Derived::func1()的地址  // 覆盖Base版本
+[1] Derived::~Derived()的地址
+[2] Derived::func2()的地址  // 新增虚函数
+```
+2. 程序加载时（操作系统行为）
+- vtable作为只读数据被加载到内存
+- 通常位于.rodata或.text段（不可写）
+内存布局示例：
+```
+  0x400000: Base vtable
+    0x400000: func1地址
+    0x400008: ~Base地址
+    
+  0x400010: Derived vtable
+    0x400010: func1地址 (Derived版本)
+    0x400018: ~Derived地址
+    0x400020: func2地址
+```
+3. 对象构造时（运行时行为）
+构造一个Derived对象时的vptr变化：`Derived* d = new Derived();`
+构造步骤：
+	1. 分配内存
+	2. **设置vptr指向Derived的vtable**（编译器隐式插入代码）
+	3. 执行Derived的构造函数
+    - 先调用Base构造函数
+        - 临时将vptr改为指向Base的vtable
+        - 执行Base构造函数体
+        - 将vptr恢复为Derived的vtable
+    - 执行Derived构造函数体
+4. 析构过程（反向操作）
+`delete d;`
+析构步骤：
+	1. **设置vptr指向Derived的vtable**
+	2. 执行Derived析构函数体
+	3. 调用Base析构函数
+    - 将vptr改为指向Base的vtable
+    - 执行Base析构函数体
+	1. 释放内存
+
+##### 虚函数表（vtable）的所有权解析
+| 特性    | 类（Class）         | 对象（Object）   |
+|-------|------------------|--------------|
+| 拥有权   | 类拥有vtable        | 对象拥有vptr     |
+| 存储内容  | 虚函数地址集合          | 指向vtable的指针  |
+| 内存位置  | 程序只读数据段（.rodata） | 对象内存布局首部（通常） |
+| 数量关系  | 每个类有唯一vtable     | 每个对象有自己的vptr |
+| 共享性   | 同类所有对象共享同一vtable | 每个vptr独立     |
+| 初始化时机 | 程序加载时            | 对象构造时        |
+| 修改可能性 | 不可修改（编译期确定）      | 构造/析构过程中可能变化 |
+1. 类拥有虚函数表（vtable）
+- **唯一性**：每个**类**（而非每个对象）在内存中有且仅有一个vtable
+- **内容**：包含该类所有虚函数的地址（包括继承的）
+```
+  class Animal {
+  public:
+      virtual void eat() { /*...*/ }
+      virtual ~Animal() {}
+  };
+  
+  class Cat : public Animal {
+  public:
+      void eat() override { /*...*/ }
+      virtual void meow() {}
+  };
+  -------------------------------------
+  //- `Animal`类的vtable：
+    [0] Animal::eat()
+    [1] Animal::~Animal()
+//- `Cat`类的vtable：
+    [0] Cat::eat()    // 覆盖Animal版本
+    [1] Cat::~Cat()   // 覆盖Animal版本
+    [2] Cat::meow()   // 新增虚函数
+//- **存储位置**：编译期生成，程序加载时置于只读数据段（典型地址示例）：
+  0x401000: Animal的vtable
+  0x401020: Cat的vtable
+```
+2. 对象拥有虚指针（vptr）
+- **每个对象独立**：每个对象实例包含一个隐藏的vptr指针
+```
+  Cat kitty;  // 内存布局示例：
+  /*
+  [0] vptr -> 指向Cat的vtable (0x401020)
+  [1] 其他成员数据...
+  */
+```
+- **构造过程**：编译器自动插入代码初始化vptr
+```
+  // 伪代码展示构造函数隐含操作
+  Cat::Cat() {
+      // 编译器插入的代码
+      this->vptr = &Cat::vtable;  // 设置vptr
+      
+      // 用户编写的构造代码
+      // ...
+  }
+```
+
+
+##### 虚函数表在哪个阶段被分配的
+(1)编译阶段
+虚函数表的创建： 在编译阶段，编译器会分析类的声明和定义， 确定哪些类包含虚函数，并为这些类创建虚函数表。虚函数表中包含指向类中所有虚函数的指针。
+(2)链接阶段
+虚函数表的分配： 在链接阶段， 虚函数表被分配具体的内存地址。链接器会将所有虚函数表放入全局内存空间中，确保每个虚函数表都有唯一的内存地址。
+(3)运行时
+虚表指针的初始化： 在运行时，当类的对象被实例化时， 虚表指针（vptr）被初始化，指向对应类的虚函数表。每个包含虚函数的类的对象都会有一个虚表指针，指向该类的虚函数表。
+
+##### 同一个类的不同对象的虚函数表是同一个吗
+> 是的，**同一个类的不同对象共享同一个虚函数表（vtable）**。
+
+**技术点分析**：
+1. **虚函数表（vtable）的作用**：
+    - 虚函数表是编译器为每个**包含虚函数的类**生成的一个静态数组，存储该类所有虚函数的地址。
+    - 每个对象通过**虚指针（vptr）** 指向其类的 vtable，运行时根据 vptr 调用正确的虚函数。
+2. **vtable 的存储位置**：
+    - vtable 是**类级别**的（每个类只有一个），在编译期生成，存储在程序的**只读数据段**（如 `.rodata`）。
+    - 对象的 vptr 在**构造时初始化**，指向类的 vtable，因此同一类的所有对象共享同一 vtable。
+3. **内存开销**：
+    - 每个对象需额外存储一个 vptr（通常 4/8 字节），但 vtable 本身不占用对象内存。
+    - 共享 vtable 减少了内存冗余，避免为每个对象复制虚函数表。
+```
+#include <iostream>
+#include <cstddef>
+
+class Base {
+public:
+    virtual void func1() { std::cout << "Base::func1\n"; }
+    virtual void func2() { std::cout << "Base::func2\n"; }
+};
+
+int main() {
+    Base obj1, obj2;
+
+    // 获取对象地址
+    std::cout << "Address of obj1: " << &obj1 << "\n";
+    std::cout << "Address of obj2: " << &obj2 << "\n\n";
+
+    // 通过对象指针访问 vptr（编译器相关，但通用）
+    void** vptr1 = *reinterpret_cast<void***>(&obj1);
+    void** vptr2 = *reinterpret_cast<void***>(&obj2);
+
+    // 打印 vtable 地址（即 vptr 指向的位置）
+    std::cout << "VTable address of obj1: " << vptr1 << "\n";
+    std::cout << "VTable address of obj2: " << vptr2 << "\n\n";
+
+    // 检查是否相同
+    if (vptr1 == vptr2) {
+        std::cout << "Result: SAME vtable (expected)\n";
+    } else {
+        std::cout << "Result: DIFFERENT vtables (error)\n";
+    }
+
+    // 验证虚函数调用（可选）
+    std::cout << "\nCalling func1 via obj1: ";
+    obj1.func1();  // 输出 Base::func1
+
+    return 0;
+}
+-------------------------------------------------------------------
+Address of obj1: 0x7ffd4d2b8f10
+Address of obj2: 0x7ffd4d2b8f18
+VTable address of obj1: 0x55a3c0f6d0c8
+VTable address of obj2: 0x55a3c0f6d0c8
+Result: SAME vtable (expected)
+Calling func1 via obj1: Base::func1
+--------------------------------------------------------------------
+//1. **对象地址不同**：`obj1` 和 `obj2` 是独立实例，地址不同。
+//2. **vtable 地址相同**：两者的 vptr 指向同一内存地址（`0x55a3c0f6d0c8`），证明共享 vtable。
+//3. **编译器实现**：示例使用 `reinterpret_cast` 访问 vptr（实际开发中应避免，但此处用于验证原理）
+```
+
+##### 基类的虚函数表存放在内存的什么区，虚表指针 vptr的初始化时间？
+1. **虚函数表（vtable）的存放位置**
+虚函数表在内存中位于**只读数据段（.rodata 或 .rdata 段）**，具体分析如下：
+- **编译期生成**：vtable 在编译阶段由编译器生成，内容固定（存储虚函数指针）。
+- **存储特性**：
+    - 位置：程序的**只读数据段**（不可修改）
+    - 原因：vtable 内容在程序运行期间不会改变
+    - 全局唯一性：同一类（包括基类）的所有对象共享同一个 vtable
+- **内存布局验证**：
+```
+#include <iostream>
+
+class Base {
+public:
+    virtual void func() { std::cout << "Base::func\n"; }
+};
+
+int main() {
+    Base b;
+    // 获取 vtable 地址（编译器相关）
+    void** vptr = *reinterpret_cast<void***>(&b);
+    
+    std::cout << "VTable address: " << vptr << std::endl;
+    std::cout << "Function address: " << vptr[0] << std::endl;
+    
+    // 尝试修改 vtable（将导致段错误）
+    // vptr[0] = nullptr; // 运行时崩溃：写入只读内存
+    return 0;
+}
+-----------------------------------------------------------
+//output
+VTable address: 0x401370
+Function address: 0x40115a
+```
+2. **虚表指针（vptr）的初始化时间**
+vptr 的初始化严格遵循对象构造顺序：
+1. **分配内存阶段**：
+    - 对象内存被分配（栈或堆）
+    - 此时 vptr **未初始化**（内存内容随机）
+2. **构造函数执行阶段**：
+    - **关键点**：编译器在构造函数开头**自动插入初始化代码**
+    - 初始化时机：在进入构造函数体之前（即成员初始化列表执行前）
+    - 初始化动作：将 vptr 设置为当前类的 vtable 地址
+3. **构造顺序示例**：
+```
+#include <iostream>
+
+class Base {
+public:
+    Base() {
+        // 此处 vptr 已指向 Base::vtable
+        std::cout << "Base ctor: vptr initialized\n";
+        printVptr();
+    }
+    virtual void func() {}
+    void printVptr() {
+        void** vptr = *(void***)this;
+        std::cout << "Current vptr: " << vptr << "\n";
+    }
+};
+
+class Derived : public Base {
+public:
+    Derived() {
+        // 此处 vptr 已更新为 Derived::vtable
+        std::cout << "Derived ctor: vptr updated\n";
+        printVptr();
+    }
+    void func() override {}
+};
+
+int main() {
+    Derived d;  // 构造过程：Base 构造 -> Derived 构造
+    return 0;
+}
+-------------------------------------------------------
+//output
+Base ctor: vptr initialized
+Current vptr: 0x401370  // Base 的 vtable
+Derived ctor: vptr updated
+Current vptr: 0x401350  // Derived 的 vtable
+```
+
+| 组件    | 位置/时机           | 技术细节                                        |
+|-------|-----------------|---------------------------------------------|
+| 虚函数表  | 只读数据段 (.rodata) | 编译期生成，进程共享，不可修改                             |
+| vptr  | 对象内存起始位置        | 每个对象独立拥有（通常占 4/8 字节）                        |
+| 初始化时机 | 构造函数开头          | 编译器隐式插入 mov [this], offset vtable（在用户代码执行前） |
+| 多态实现  | 动态绑定            | 通过 vptr 查找 vtable，再定位虚函数地址                  |
+
+##### 虚函数表，是对象拥有还是类拥有
+虚函数表（vtable）是类拥有的， 而不是对象拥有的。每个包含虚函数的类都有一个虚函数表，表中存储了指向该类虚函数实现的指针。对象中有一个指向该虚函数表的指针（通常称为虚指针， vptr)
+##### 虚函数内部调用非虚函数是调用指针类还是对象类
+在C++中，当虚函数内部调用非虚函数时，调用的目标版本取决于**调用表达式的静态类型**，而非动态类型。这与虚函数调用本身的动态绑定机制形成鲜明对比。
+
+| 调用类型    | 绑定方式 | 决定因素        | 示例代码表现             |
+|---------|------|-------------|--------------------|
+| 虚函数调用   | 动态绑定 | 对象的实际类型     | 通过vtable查找当前对象的实现  |
+| 非虚函数调用  | 静态绑定 | 调用表达式的静态类型  | 直接调用静态类型所属类的函数版本   |
+| 虚函数内调非虚 | 静态绑定 | 包含该调用的函数所属类 | 调用该虚函数定义所在类的非虚函数版本 |
+> 当一个虚函数在调用时，调用的是实际对象的虚函数实现，这是通过虚函数表（vtable）来实现的。然而，非虚函数的调用是静态绑定的，即在编译时就已经确定了调用哪个函数。因此，当虚函数内部调用非虚函数时，调用的是当前对象所属类的非虚函数
+
+
+
+#### 虚函数指针
+##### 意义
+虚函数指针的意义在于实现多态。多态是指同一种操作作用于不同的对象，可以有不同的解释，产生不同的执行结果。通过使用虚函数和虚函数指针，可以在运行时确定调用哪个子类中的虚函数，从而实现了动态绑定，使得程序具有更好的灵活性和扩展性。
+此外，虚函数指针也是实现多级继承的关键，在多级继承中，**每个子类都需要维护自己的虚函数表及其对应的虚函数指针。**
+
+![[虚函数指针.jpg]]
+
+#### 虚函数的调用过程
+1. 在编译期间，编译器会根据函数调用的类型和对象的类型确定要调用的函数。
+2. 在运行期间，程序会根据对象的实际类型来决定调用哪个函数。这个过程叫做动态绑定或者后期绑定。
+3. 程序通过虚函数表（vtable）来实现动态绑定。每个含有虚函数的类都有自己的虚函数表，存储了指向实际函数地址的指针。在对象被创建时，它的指针会指向所属类的虚函数表。
+4. 当调用虚函数时，在对象中存储的指针会被解引用，获取到虚函数表的地址。然后根据函数调用的类型，从虚函数表中获取相应的函数地址。
+5. 最后，程序跳转到函数地址处执行实际的代码。由于是动态绑定，所以调用的函数是根据对象实际类型来决定的。
+![[虚函数的调用过程.png]]
+
 
 #### 哪些函数不能被声明为虚函数
 
+| 函数类型          | 是否可为虚               | 原因                         |
+|---------------|---------------------|----------------------------|
+| 普通函数（非成员函数）   | ❌                   | 虚函数必须是类的成员函数               |
+| 静态成员函数        | ❌                   | 静态函数与类关联而非对象，没有this指针      |
+| 构造函数          | ❌                   | 对象构造时虚函数机制尚未建立             |
+| 内联函数          | ⚠️                  | 语法上允许但实际不会内联，失去内联意义        |
+| 友元函数          | ❌                   | 友元函数不是类的成员函数               |
+| 模板成员函数        | ⚠️                  | 不能是虚函数模板，但模板类中的普通虚函数可以     |
+| constexpr函数   | ❌(C++14前)/✅(C++14+) | C++14起允许constexpr虚函数       |
+| 协程（coroutine） | ❌                   | 协程不能是虚函数                   |
+| 赋值运算符（特定形式）   | ⚠️                  | 某些形式的operator=不能为虚（如参数非引用） |
+
+
 #### 构造函数和析构函数能不能是虚函数，说明原因
+
+| 函数类型   | 能否为虚函数   | 关键原因                                 | 后果/影响                                                  | 最佳实践                                  |
+| ------ | -------- | ------------------------------------ | ------------------------------------------------------ | ------------------------------------- |
+| 构造函数   | ❌ 不能     | 1. 对象创建时vptr未初始化<br>2. 构造函数需静态绑定具体类型 | 编译器报错：error: constructors cannot be declared 'virtual' | 永远不要声明为virtual                        |
+| 析构函数   | ✅ 必须（基类） | 1. 确保派生类资源释放<br>2. 避免通过基类指针删除时的资源泄漏  | 非虚析构导致派生类析构不被调用 → 资源泄漏                                 | 基类析构函数始终声明为virtual                    |
+| 纯虚析构函数 | ✅ 可以     | 1. 使类成为抽象类<br>2. 强制派生类实现析构逻辑         | 必须提供实现（否则链接错误）                                         | 需单独定义：ClassName::~ClassName() { ... } |
+
+ ==**构造函数不能是虚函数**==
+**根本原因**
+1. **对象构造顺序限制**：
+    - 构造对象时，必须先构造基类部分，再构造派生类部分
+    - 如果构造函数是虚函数，需要vptr指向vtable，但vptr本身是对象的一部分，尚未完全构造
+2. **虚函数机制未就绪**：
+    - 虚函数表(vtable)在对象构造期间逐步建立
+    - 构造函数执行时，对象的动态类型信息不完整
+3. **语义矛盾**：
+    - 虚函数用于实现"运行时确定行为"
+    - 构造函数的目的恰恰是"创建确定类型的对象
+==**析构函数应该（常常必须）是虚函数**==
+**根本原因**
+4. **多态销毁需求**：
+    - 通过基类指针删除派生类对象时，需要调用完整的析构链
+    - 非虚析构函数会导致派生类部分未被正确销毁
+5. **资源安全保证**：
+    - 确保派生类特有的资源（如文件句柄、内存等）被释放
+    - 防止资源泄漏
+6. **对象析构顺序**：
+    - 析构顺序与构造相反：派生类 → 基类
+    - 虚析构函数保证这个顺序在多态情况下依然正确
 
 #### 没有虚函数的话， C++ 如何实现多态
 
+| 方法            | 实现机制       | 优点     | 缺点         | 适用场景        |
+|---------------|------------|--------|------------|-------------|
+| 模板与静态多态       | 编译期代码生成    | 零运行时开销 | 代码膨胀       | 性能敏感的基础设施   |
+| 函数指针          | 运行时函数指针调用  | 灵活     | 类型不安全      | 回调机制、插件系统   |
+| variant/visit | C++17的变体访问 | 类型安全   | 需要预先知道所有类型 | 有限类型的多态处理   |
+| CRTP模式        | 编译期继承与静态多态 | 无虚函数开销 | 语法复杂       | 性能关键的基类设计   |
+| 类型擦除          | 通过包装器统一接口  | 接口统一   | 有一定运行时开销   | 需要处理未知类型的场景 |
+1. ==模板与静态多态（编译期多态）==
+**实现原理**
+通过模板在编译期生成不同的代码版本，实现"静态多态"。
+```
+template <typename T>
+class Processor {
+public:
+    void process(T& obj) {
+        obj.execute();  // 编译时决议
+    }
+};
 
+class AlgorithmA {
+public:
+    void execute() { std::cout << "AlgorithmA\n"; }
+};
 
+class AlgorithmB {
+public:
+    void execute() { std::cout << "AlgorithmB\n"; }
+};
 
-### 虚函数和虚函数表
+int main() {
+    Processor<AlgorithmA> p1;
+    Processor<AlgorithmB> p2;
+    AlgorithmA a;
+    AlgorithmB b;
+    
+    p1.process(a);  // 输出 AlgorithmA
+    p2.process(b);  // 输出 AlgorithmB
+}
+```
+**特点**：
+- 零运行时开销
+- 可能导致代码膨胀
+- 所有类型必须在编译期已知
+2. ==函数指针实现多态==
+**实现原理**
+通过存储和调用不同的函数指针实现运行时多态。
+```
+class Button {
+    using ClickHandler = void(*)();
+    ClickHandler handler;
+public:
+    void setHandler(ClickHandler h) { handler = h; }
+    void click() { if (handler) handler(); }
+};
 
-#### 虚函数表在哪个阶段被分配的
+void saveHandler() { std::cout << "Saving...\n"; }
+void loadHandler() { std::cout << "Loading...\n"; }
 
-#### 同一个类的不同对象的虚函数表是同一个吗
+int main() {
+    Button btn;
+    btn.setHandler(saveHandler);
+    btn.click();  // 输出 Saving...
+    
+    btn.setHandler(loadHandler);
+    btn.click();  // 输出 Loading...
+}
+```
+**特点**：
+- 比虚函数更轻量
+- 缺乏类型安全
+- 难以维护复杂状态
 
-#### 基类的虚函数表存放在内存的什么区，虚表指针 vptr的初始化时间？
+### 纯虚函数
+> **本质**：纯虚函数是强制派生类实现的接口契约，使类成为抽象基类（不能实例化）
 
-#### 虚函数表，是对象拥有还是类拥有
+| 特性    | 说明         |
+|-------|------------|
+| 语法标志  | = 0 后缀     |
+| 类类型   | 使类成为抽象类    |
+| 实例化限制 | 不能直接创建对象   |
+| 派生类义务 | 必须重写所有纯虚函数 |
+| 多态基础  | 实现接口与实现分离  |
+#### 为什么需要纯虚函数？
+##### 1. 强制接口实现（契约式编程）
+```
+class Shape {  // 抽象基类
+public:
+    virtual double area() const = 0;  // 纯虚函数
+    virtual void draw() const = 0;    // 纯虚函数
+};
 
-#### 虚函数内部调用非虚函数是调用指针类还是对象类
+class Circle : public Shape {
+    double radius;
+public:
+    double area() const override {    // 必须实现
+        return 3.14 * radius * radius;
+    }
+    
+    void draw() const override {      // 必须实现
+        std::cout << "Drawing circle\n";
+    }
+};
 
+// 未实现所有纯虚函数 → 编译错误！
+class Square : public Shape { 
+    /* 缺少 area() 和 draw() 实现 */
+};
+```
+##### 2. 创建不可实例化的接口
+```
+AbstractDatabase* db = new AbstractDatabase();  
+// 错误！抽象类不能实例化
 
-
-
-### 虚函数和纯虚函数
+// 正确用法：通过具体子类操作
+AbstractDatabase* db = new MySQLDatabase();
+db->query("SELECT...");
+```
 
 #### 纯虚函数的实现原理
 
@@ -2665,55 +3962,393 @@ void* _aligned_malloc(size_t size, size_t alignment);
 
 
 ### 抽象类和纯虚函数
+| 特性   | 抽象类           | 纯虚函数                      |
+|------|---------------|---------------------------|
+| 定义方式 | 包含至少一个纯虚函数的类  | virtual 返回类型 函数名(参数) = 0; |
+| 实例化  | 不能实例化         | 无实例化概念                    |
+| 主要作用 | 充当接口规范/基类模板   | 强制派生类实现特定接口               |
+| 实现要求 | 派生类必须实现所有纯虚函数 | 必须在派生类中被重写                |
+| 函数实现 | 可以有实现（但通常不提供） | 可以有默认实现（C++11起）           |
+| 继承特性 | 用于派生其他类       | 在派生类中可设为非虚函数              |
+| 多态支持 | 支持运行时多态       | 是实现多态的基础                  |
+| 包含成员 | 可包含数据成员和非虚函数  | 只能是成员函数                   |
+#### 抽象类深度解析
+**本质特征**
+- **无法实例化**：不能创建抽象类的对象
+- **接口规范**：定义派生类必须实现的接口
+- **多态基础**：通过基类指针/引用操作派生类对象
+```
+// 抽象类示例：图形接口
+class Shape {
+public:
+    // 纯虚函数 - 接口规范
+    virtual double area() const = 0;
+    virtual void draw() const = 0;
+    
+    // 普通成员函数
+    void printInfo() const {
+        std::cout << "Shape information\n";
+    }
+    
+    // 虚析构函数（必须！）
+    virtual ~Shape() = default;
+    
+protected:
+    // 数据成员
+    std::string color = "black";
+};
+```
 
+### 抽象类和接口类
 
-### 虚析构函数
-#### 简述⼀下虚析构函数，什么作⽤
-
-#### 说说为什么要虚析构，为什么不能虚构造
-
+| 特性      | 抽象类           | 接口类（纯抽象类）      |
+|---------|---------------|----------------|
+| 纯虚函数数量  | ≥1个           | 所有函数都是纯虚函数     |
+| 数据成员    | 可包含           | 不应包含数据成员（理想情况） |
+| 成员函数实现  | 可包含实现         | 不应包含任何实现       |
+| 使用场景    | 部分实现共享 + 接口规范 | 纯接口规范          |
+| C++标准支持 | 直接支持          | 通过纯抽象类模拟       |
 
 ### 虚继承
-
-#### 虚继承解决什么问题
+[[#菱形继承问题（钻石问题）]]
 
 
 ### 深拷⻉和浅拷⻉的区别
+> **本质区别**：深拷贝创建资源的**独立副本**，浅拷贝只复制资源的**引用指针**
 
+| 特性    | 浅拷贝 (Shallow Copy) | 深拷贝 (Deep Copy)   |
+|-------|--------------------|-------------------|
+| 复制内容  | 只复制指针值             | 复制指针指向的实际数据       |
+| 内存行为  | 共享底层资源             | 创建全新资源副本          |
+| 对象独立性 | 修改相互影响             | 完全独立，互不影响         |
+| 析构风险  | 双重释放风险             | 安全释放              |
+| 实现方式  | 编译器默认生成            | 需手动实现拷贝构造函数/赋值运算符 |
+| 性能    | ⚡️ 快速 (只复制指针)      | ⏱ 较慢 (需分配内存+复制数据) |
+| 适用场景  | 只读共享数据、简单结构        | 含指针/动态资源的类        |
+浅拷贝
+```
+class ShallowString {
+public:
+    char* data;
+    
+    // 默认拷贝构造函数（浅拷贝）
+    ShallowString(const ShallowString& other)
+        : data(other.data) {}  // 仅复制指针
+    
+    ShallowString(const char* str) {
+        data = new char[strlen(str) + 1];
+        strcpy(data, str);
+    }
+    
+    ~ShallowString() { delete[] data; }
+};
+
+void shallowDemo() {
+    ShallowString s1("Hello");
+    ShallowString s2 = s1;  // 浅拷贝
+    
+    // 危险：s1和s2共享同一内存
+    s2.data[0] = 'X';
+    
+    std::cout << s1.data;  // 输出 "Xello" (被修改！)
+} // 双重释放！s1和s2都尝试delete[]同一内存
+-----------------------------------------------------
+s1: [0x1000] → "Hello"
+s2: [0x1000] → (同一内存)
+```
+深拷贝
+```
+class DeepString {
+public:
+    char* data;
+    
+    // 深拷贝构造函数
+    DeepString(const DeepString& other) {
+        data = new char[strlen(other.data) + 1];
+        strcpy(data, other.data);  // 复制内容
+    }
+    
+    // 深拷贝赋值运算符
+    DeepString& operator=(const DeepString& other) {
+        if (this != &other) {
+            delete[] data;  // 释放旧资源
+            data = new char[strlen(other.data) + 1];
+            strcpy(data, other.data);
+        }
+        return *this;
+    }
+    
+    DeepString(const char* str) {
+        data = new char[strlen(str) + 1];
+        strcpy(data, str);
+    }
+    
+    ~DeepString() { delete[] data; }
+};
+
+void deepDemo() {
+    DeepString s1("Hello");
+    DeepString s2 = s1;  // 深拷贝
+    
+    s2.data[0] = 'X';
+    
+    std::cout << s1.data;  // 输出 "Hello" (未改变)
+    std::cout << s2.data;  // 输出 "Xello"
+} // 安全释放：s1和s2各自内存
+-------------------------------------------------------------
+s1: [0x1000] → "Hello"
+s2: [0x2000] → "Hello" (副本)
+```
+#### 浅拷贝可能造成的问题
+
+| 风险   | 后果      | 示例场景          |
+|------|---------|---------------|
+| 双重释放 | 程序崩溃    | 多个对象析构时释放同一内存 |
+| 悬垂指针 | 访问已释放内存 | 一个对象析构后另一对象访问 |
+| 数据篡改 | 非预期修改   | 多对象共享状态相互影响   |
+| 内存泄漏 | 资源丢失    | 原始指针被覆盖未释放    |
 
 ### 运算符重载
+> **核心目标**：赋予用户自定义类型与内置类型一致的操作体验，提升代码可读性和表达力
 
+| 运算符类别 | 可重载运算符                             | 不可重载运算符           |
+| ----- | ---------------------------------- | ----------------- |
+| 算术运算符 | + - * / % ++ --                    |                   |
+| 关系运算符 | == != < > <= >=                    |                   |
+| 逻辑运算符 | ! && \|                            |                   |
+| 位运算符  | & \| ^ ~ << >>                     |                   |
+| 赋值运算符 | = += -= *= /= %= &= \|= ^= <<= >>= |                   |
+| 内存运算符 | new new[] delete delete[]          |                   |
+| 其他运算符 | () [] -> , ->*                     | :: . .* ?: sizeof |
+| 特殊运算符 | <=> (C++20)                        | typeid (部分限制)     |
+**三种方式**
+成员函数重载
+```
+class Vector {
+public:
+    Vector operator+(const Vector& rhs) const {
+        return Vector(x + rhs.x, y + rhs.y);
+    }
+private:
+    double x, y;
+};
+```
+全局函数重载
+```
+class Vector {
+    friend Vector operator+(const Vector& lhs, const Vector& rhs);
+};
+
+Vector operator+(const Vector& lhs, const Vector& rhs) {
+    return Vector(lhs.x + rhs.x, lhs.y + rhs.y);
+}
+```
+lambda重载
+```
+auto vectorAdd = [](const Vector& a, const Vector& b) {
+    return Vector(a.x + b.x, a.y + b.y);
+};
+```
 
 ### 空类能实例化吗
-
-
+> **可以实例化**
+空类（没有任何成员变量和成员函数的类）在 C++ 中完全可以实例化，且编译器会为其提供默认实现。
+每个实例会占用最小的内存（通常是 1 字节） ，以确保每个对象有一个唯一的地址
 
 ### 当一个类中没有任何成员变量和成员函数 ， 这时sizeof(A)的A值是多少
 
+其实就是空类， 即使一个类中没有任何成员变量和成员函数，其 sizeof（） 值也为 1。这是因为编译器必须为每个对象分配一个独特的地址，以便在程序中区分不同的对象实例，因此会占用 1字节的空间
 
 ### 子类不能继承父类的函数有哪些
 
+| 函数类型              | 是否可继承    | 原因/限制               |
+|-------------------|----------|---------------------|
+| 构造函数              | ❌ 不能     | 每个类必须定义自己的构造函数      |
+| 析构函数              | ❌ 不能     | 每个类需要自己的析构函数        |
+| 赋值运算符 (operator=) | ❌ 不能     | 每个类需要自己定义           |
+| 私有成员函数            | ❌ 不能直接访问 | 访问权限限制              |
+| 非虚的父类同名函数 (隐藏)    | ❌ 被隐藏    | 子类定义同名函数会隐藏父类版本     |
+| 友元函数              | ❌ 不能     | 友元关系不继承             |
+| 静态成员函数            | ✅ 可继承但特殊 | 属于类而非对象，子类可以调用但不能覆盖 |
+| 模板成员函数            | ✅ 可继承但特殊 | 子类可以继承但不能覆盖模板函数     |
 
 ### C++类构造函数初始化列表执行顺序
 
+| 要素     | 说明                       |
+|--------|--------------------------|
+| 声明顺序决定 | 成员变量在类定义中的声明顺序决定初始化顺序    |
+| 列表顺序无关 | 初始化列表中的书写顺序不影响实际执行顺序     |
+| 基类优先原则 | 基类构造 → 成员变量初始化 → 构造函数体执行 |
+![[构造函数初始化顺序.png|300]]
+
+
 
 ### 构造函数的顺序，析构函数的顺序
+| 类别     | 构造函数调用顺序                                        | 析构函数调用顺序                                            | 关键要点                                                       |
+|--------|-------------------------------------------------|-----------------------------------------------------|------------------------------------------------------------|
+| 单继承    | 1. 基类构造函数2. 成员变量构造函数（按声明顺序）3. 派生类构造函数           | 1. 派生类析构函数2. 成员变量析构函数（逆声明顺序）3. 基类析构函数               | 成员初始化顺序只与声明顺序有关，与初始化列表顺序无关                                 |
+| 多继承    | 1. 基类构造函数（按继承声明顺序）2. 成员变量构造函数3. 派生类构造函数         | 1. 派生类析构函数2. 成员变量析构函数3. 基类析构函数（逆继承声明顺序）             | 多继承时基类构造顺序按class Derived : public Base1, public Base2的声明顺序 |
+| 虚继承    | 1. 虚基类构造函数（最优先）2. 非虚基类构造函数3. 成员变量构造函数4. 派生类构造函数 | 1. 派生类析构函数2. 成员变量析构函数3. 非虚基类析构函数4. 虚基类析构函数（最后）      | 虚基类保证只被构造一次，所有共享虚基类的派生类都直接调用虚基类构造函数                        |
+| 含成员对象  | 1. 基类构造函数2. 成员对象构造函数（按类中声明顺序）3. 派生类构造函数         | 1. 派生类析构函数2. 成员对象析构函数（逆声明顺序）3. 基类析构函数               | 即使成员对象在初始化列表中被省略，仍会调用默认构造函数                                |
+| 构造失败   | 已构造的基类/成员会自动析构                                  | 不会调用当前类的析构函数                                        | 构造函数中抛出异常时，对象被视为从未构造完成                                     |
+| 虚析构重要性 | 无影响                                             | 通过基类指针删除派生类对象时：- 有虚析构：完整调用派生类→基类析构链- 无虚析构：仅调用基类析构函数 | 多态基类必须声明虚析构函数，否则派生类资源会泄漏                                   |
+| 特殊案例   | 1. 基类的基类（递归向上）2. 虚基类（优先）3. 非虚基类4. 成员5. 自身       | 完全逆序：自身→成员→非虚基类→虚基类                                 | 虚基类构造最先、析构最后，保证共享基类在继承体系中最长生命周期                            |
+**构造顺序**：
 
+> 虚基优先 → 基类声明序 → 成员声明序 → 自身
+
+**析构顺序**：
+
+> 自身 → 成员逆序 → 基类逆序 → 虚基最后
+
+重要规则总结
+1. **构造如栈，先入后出**：最先构造的部分最后析构
+2. **虚基类最特殊**：构造最先开始，析构最后结束
+3. **成员顺序看声明**：与初始化列表顺序无关
+4. **多态必虚析构**：通过基类指针删除时必须虚析构
+5. **异常安全**：构造失败时，已构造的部分会自动析构
 
 ### 成员变量初始化顺序
 
 
 
+![[成员变量构造顺序.png]]
 
 
-### 友元函数
 
+### 友元函数和友元类
+| 特性   | 友元函数 (Friend Function) | 友元类 (Friend Class) |
+|------|------------------------|--------------------|
+| 定义位置 | 类外部（全局或命名空间）           | 类内部声明              |
+| 访问权限 | 可访问单个类的私有/保护成员         | 可访问整个类的私有/保护成员     |
+| 声明方式 | friend 返回类型 函数名(参数);   | friend class 类名;   |
+| 成员关系 | 非成员函数                  | 非成员类               |
+| 继承性  | 不继承                    | 不继承                |
+| 传递性  | 无传递性                   | 无传递性               |
+| 使用场景 | 运算符重载、工具函数             | 紧密协作的类             |
+#### 友元函数
+##### 1. 基本特性
+- **非成员函数**：不属于任何类
+- **特权访问**：可访问类的私有(private)和保护(protected)成员
+- **单向关系**：声明友元的类决定谁可访问自己
+##### 2. 声明语法
+```
+class MyClass {
+private:
+    int secret;
+public:
+    friend void friendFunction(MyClass& obj);  // 友元声明
+};
 
-### 友元类
+// 定义友元函数（不是成员函数！）
+void friendFunction(MyClass& obj) {
+    obj.secret = 42;  // 直接访问私有成员
+}
+```
+##### 3. 典型应用：运算符重载
+```
+class Complex {
+private:
+    double real;
+    double imag;
+public:
+    Complex(double r, double i) : real(r), imag(i) {}
+    
+    // 声明友元运算符重载
+    friend Complex operator+(const Complex& c1, const Complex& c2);
+};
 
+// 实现友元运算符
+Complex operator+(const Complex& c1, const Complex& c2) {
+    return Complex(c1.real + c2.real,  // 访问私有成员
+                  c1.imag + c2.imag);
+}
+
+int main() {
+    Complex a(1.5, 2.5), b(3.0, 4.0);
+    Complex c = a + b;  // 调用友元运算符
+    return 0;
+}
+```
+
+| 特性     | 说明                                 |
+|--------|------------------------------------|
+| 访问权限   | 可访问声明它的类的所有成员（包括private/protected） |
+| 作用域    | 在类外定义，但拥有特殊访问权限                    |
+| this指针 | 没有this指针（非成员函数）                    |
+| 重载能力   | 可重载                                |
+| 继承影响   | 派生类不会继承基类的友元关系                     |
+#### 友元类
+##### 1. 基本特性
+- **类级授权**：整个类获得访问权限
+- **单向关系**：A声明B为友元 → B可访问A的私有成员
+- **非传递性**：B的朋友不能访问A
+##### 2. 声明语法
+```
+class DataHolder {
+private:
+    int secretData;
+public:
+    friend class DataProcessor;  // 友元类声明
+};
+
+class DataProcessor {
+public:
+    void process(DataHolder& dh) {
+        dh.secretData *= 2;  // 直接访问私有成员
+    }
+};
+```
+##### 3. 典型应用：紧密协作类
+```
+class BankAccount;  // 前向声明
+
+class AccountLogger {
+public:
+    void logTransaction(const BankAccount& acc);
+};
+
+class BankAccount {
+private:
+    double balance;
+    std::string owner;
+    
+    // 声明友元类
+    friend class AccountLogger;
+};
+
+// AccountLogger成员函数实现
+void AccountLogger::logTransaction(const BankAccount& acc) {
+    std::cout << "Account " << acc.owner << ": "
+              << "Balance = " << acc.balance << "\n";
+}
+```
+
+| 特性     | 说明                     |
+|--------|------------------------|
+| 访问权限   | 友元类的所有成员函数都可访问声明类的私有成员 |
+| 关系方向   | 单向性（A→B友好 ≠ B→A友好）     |
+| 嵌套声明   | 可声明嵌套类为友元              |
+| 前向声明要求 | 声明友元类前需有完整声明或前向声明      |
+| 继承限制   | 友元关系不可继承               |
 
 ### 在成员函数中调用 delete this 会出现什么问题
-
+| 问题类型    | 具体表现                             | 后果                                   |
+|---------|----------------------------------|--------------------------------------|
+| 对象立即失效  | 执行delete this后，对象内存被释放，但成员函数仍在执行 | 后续访问成员变量或调用成员函数导致未定义行为（崩溃/数据损坏）      |
+| 虚函数调用问题 | 析构函数会修改虚函数表指针(vptr)              | 如果在虚函数中调用delete this，后续虚函数调用可能指向无效地址 |
+| 双重删除风险  | 其他代码可能不知道对象已被删除                  | 再次删除同一对象导致程序崩溃                       |
+| 栈对象误删   | 对栈分配的对象调用delete this             | 必然导致程序崩溃                             |
+| 多线程安全问题 | 其他线程可能正在访问该对象                    | 并发访问已删除对象导致竞争条件                      |
+| 继承体系问题  | 如果基类方法中调用delete this，但对象实际是派生类实例 | 可能未正确调用完整析构链                         |
+**安全使用条件**
+如果必须使用`delete this`，必须确保：
+1. 对象一定是**堆分配**的（通过`new`创建）
+2. `delete this`必须是成员函数中**最后执行的操作**
+3. 调用后**不再访问任何成员变量或调用成员函数**
+4. 对象**不会被再次删除**
+5. 在**单线程环境**或**已确保线程安全**的情况下使用
+6. 在**非虚函数**中调用更安全（避免vptr修改问题）
 
 
 
